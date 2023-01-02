@@ -1,0 +1,118 @@
+import greenfoot.Actor;
+import greenfoot.Greenfoot;
+import java.util.ArrayList;
+
+public class Snake extends Actor {
+   private ArrayList<Tail> tailList = new ArrayList();
+   private int score = 0;
+   private Counter counter;
+
+   public Snake(Counter counter) {
+       this.counter = counter;
+   }
+
+   public void act() {
+       this.checkKeyPress();
+       if (!this.tailAhead() && !this.atWorldEdge()) {
+           this.move(1);
+           this.addTailBehindHead();
+       } else {
+           Greenfoot.stop();
+       }
+
+       if (this.eat()) {
+           this.newFood();
+           ++this.score;
+           this.counter.setValue(this.score);
+       } else {
+           this.eraseEndOfTail();
+       }
+
+   }
+
+   public void checkKeyPress() {
+       if (Greenfoot.isKeyDown("right")) {
+           if (this.getRotation() != 180) {
+               this.setRotation(0);
+           }
+       } else if (Greenfoot.isKeyDown("down")) {
+           if (this.getRotation() != 270) {
+               this.setRotation(90);
+           }
+       } else if (Greenfoot.isKeyDown("left")) {
+           if (this.getRotation() != 0) {
+               this.setRotation(180);
+           }
+       } else if (Greenfoot.isKeyDown("up") && this.getRotation() != 90) {
+           this.setRotation(270);
+       }
+
+   }
+
+   public boolean atWorldEdge() {
+       if (this.getX() == 0 && this.getRotation() == 180) {
+           return true;
+       } else if (this.getY() == 0 && this.getRotation() == 270) {
+           return true;
+       } else if (this.getX() == this.getWorld().getWidth() - 1 && this.getRotation() == 0) {
+           return true;
+       } else {
+           return this.getY() == this.getWorld().getHeight() - 1 && this.getRotation() == 90;
+       }
+   }
+
+   public boolean eat() {
+       Actor Food = this.getOneObjectAtOffset(0, 0, Food.class);
+       if (Food != null) {
+           this.getWorld().removeObject(Food);
+           return true;
+       } else {
+           return false;
+       }
+   }
+
+   public boolean canMove() {
+       return true;
+   }
+
+   public void newFood() {
+       Food Food = new Food();
+       this.getWorld().addObject(Food, Greenfoot.getRandomNumber(this.getWorld().getWidth()), Greenfoot.getRandomNumber(this.getWorld().getHeight()));
+   }
+
+   public void addTailBehindHead() {
+       Tail Tail = new Tail();
+       if (this.getRotation() == 0) {
+           this.getWorld().addObject(Tail, this.getX() - 1, this.getY());
+       } else if (this.getRotation() == 90) {
+           this.getWorld().addObject(Tail, this.getX(), this.getY() - 1);
+       } else if (this.getRotation() == 180) {
+           this.getWorld().addObject(Tail, this.getX() + 1, this.getY());
+       } else if (this.getRotation() == 270) {
+           this.getWorld().addObject(Tail, this.getX(), this.getY() + 1);
+       }
+
+       this.tailList.add(0, Tail);
+   }
+
+   public void eraseEndOfTail() {
+       Tail Tail = (Tail)this.tailList.get(this.tailList.size() - 1);
+       this.getWorld().removeObject(Tail);
+       this.tailList.remove(this.tailList.size() - 1);
+   }
+
+   public boolean tailAhead() {
+       Actor Tail = new Tail();
+       if (this.getRotation() == 0) {
+           Tail = this.getOneObjectAtOffset(1, 0, Tail.class);
+       } else if (this.getRotation() == 90) {
+           Tail = this.getOneObjectAtOffset(0, 1, Tail.class);
+       } else if (this.getRotation() == 180) {
+           Tail = this.getOneObjectAtOffset(-1, 0, Tail.class);
+       } else if (this.getRotation() == 270) {
+           Tail = this.getOneObjectAtOffset(0, -1, Tail.class);
+       }
+
+       return Tail != null;
+   }
+}
